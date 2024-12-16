@@ -4,17 +4,18 @@ const productList = document.getElementById("products");
 const categoriesList = document.getElementById("categories");
 const productsCart = document.getElementById("cart");
 const buttonCart = document.getElementById("cart-button");
-const toastElement = document.getElementById('liveToast');
+const toastElement = document.getElementById("liveToast");
 const toast = new bootstrap.Toast(toastElement);
-
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 let allProducts = [];
-let cart = [];
 
 //when te page load, get the products and categories
 document.addEventListener("DOMContentLoaded", () => {
   getProducts();
   getCategories();
+  renderProductsCart();
+  renderQuantityProductsCart();
 });
 
 /**
@@ -68,7 +69,8 @@ function renderCategories(categories) {
   categoriesList.innerHTML = "";
 
   const ulElement = document.createElement("ul");
-  ulElement.className = "list-inline d-flex flex-wrap";
+  ulElement.className =
+    "list-inline d-flex flex-wrap justify-content-evenly p-3";
 
   categories.forEach((category) => {
     const categoryItem = document.createElement("li");
@@ -82,10 +84,8 @@ function renderCategories(categories) {
       getProducts(category);
     });
 
-    // Añadimos el enlace al <li>
     categoryItem.appendChild(categoryLink);
 
-    // Añadimos el <li> al <ul>
     ulElement.appendChild(categoryItem);
   });
 
@@ -105,33 +105,36 @@ function renderProducts(products) {
     productItem.className = "col-sm-6 col-md-4 col-lg-3";
 
     productItem.innerHTML = `
-           <div class="card h-100 shadow-sm p-3">
-  <div class="ratio ratio-4x3">
-    <img src="${product.image}" class="card-img-top img-fluid object-cover" alt="${product.title}">
-  </div>
-  <div class="card-body d-flex flex-column">
-    <h5 class="card-title">${product.title}</h5>
-    <p class="card-text text-success fw-bold">$${product.price}</p>
-    <p class="card-text text-muted text-truncate" style="max-width: 250px;">
-      ${product.description}
-    </p>
-    <div class="mt-auto d-flex justify-content-between">
-       <button type="button" class="btn btn-primary" onclick="captureProduct(products)">Comprar</button>
-            
-      
-     <a href="product-detail.html?id=${product.id}" class="btn btn-link">Ver detalle</a>
+      <div class="card h-100 shadow-sm p-3">
+        <div class="ratio ratio-4x3">
+          <img src="${product.image}" class="card-img-top img-fluid object-cover" alt="${product.title}">
+        </div>
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${product.title}</h5>
+          <p class="card-text text-success fw-bold">$${product.price}</p>
+          <p class="card-text text-muted text-truncate" style="max-width: 250px;">
+            ${product.description}
+          </p>
+          <div class="mt-auto d-flex justify-content-between">
+            <button type="button" class="btn btn-primary">
+              Comprar
+            </button>
+            <a href="product-detail.html?id=${product.id}" class="btn btn-link">Ver detalle</a>
+          </div>
+        </div>
+      </div>
+    `;
 
+    const buyButton = productItem.querySelector("button");
 
-    </div>
-  </div>
-</div>
-        `;
+    buyButton.addEventListener("click", function () {
+      captureProduct(product);
+    });
 
     productList.appendChild(productItem);
   });
-
-  captureProduct(products);
 }
+
 //filter products
 document.getElementById("search").addEventListener("input", (event) => {
   const query = event.target.value.toLowerCase();
@@ -150,33 +153,26 @@ document.getElementById("search").addEventListener("input", (event) => {
  *
  * @param {Array} products - An array of product objects to be added to the cart.
  */
-function captureProduct(products) {
-  const buttons = productList.querySelectorAll("button");
-  buttons.forEach((button, index) => {
-    button.addEventListener("click", function () {
-      const selectedProduct = products[index];
-      const existingProduct = cart.find(
-        (item) => item.id === selectedProduct.id
-      );
+function captureProduct(product) {
+  const existingProduct = cart.find((item) => item.id === product.id);
 
-      if (existingProduct) {
-        existingProduct.quantity += 1;
-        console.log(
-          `Cantidad actualizada: ${existingProduct.title}, Cantidad: ${existingProduct.quantity}`
-        );
-      } else {
-        addToCart({ ...selectedProduct, quantity: 1 });
-        const toastBody = toastElement.querySelector('.toast-body');
-        toastBody.textContent = `El producto "${selectedProduct.title}" ha sido agregado al carrito.`;
-      
-        // Mostrar el toast
-        toast.show();
-      }
+  if (existingProduct) {
+    existingProduct.quantity += 1;
+    console.log(
+      `Cantidad actualizada: ${existingProduct.title}, Cantidad: ${existingProduct.quantity}`
+    );
+  } else {
+    cart.push({ ...product, quantity: 1 });
+    const toastBody = toastElement.querySelector(".toast-body");
+    toastBody.textContent = `El producto "${product.title}" ha sido agregado al carrito.`;
 
-      renderProductsCart();
-      renderQuantityProductsCart();
-    });
-  });
+    // Mostrar el toast
+    toast.show();
+  }
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  renderProductsCart();
+  renderQuantityProductsCart();
 }
 
 /**
@@ -201,41 +197,38 @@ function addToCart(product) {
 
 function renderProductsCart() {
   productsCart.innerHTML = "";
+  const offcanvasTitle = document.getElementById("offcanvasExampleLabel");
+  if(cart.length === 0) {
+    offcanvasTitle.textContent = "Tu carrito se encuentra vacio.";
+  } else {
+    offcanvasTitle.textContent = "Estos son tus productos:";
+  }
 
   cart.forEach((product) => {
     const productItem = document.createElement("div");
     productItem.className = "col-12 w-100 mb-3";
 
     productItem.innerHTML = `
-   <div class="list-group w-100">
-   
-    <div class="d-flex align-items-center justify-content-between">
-  
-  <h6 class="mb-0 flex-grow-1 text-truncate me-3">
-    ${product.title}
-  </h6>
+      <div class="list-group w-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 flex-grow-1 text-truncate me-3">
+            ${product.title}
+          </h6>
 
+          <p class="mb-0 opacity-75 text-end pe-3">
+            $${product.price}
+          </p>
 
-  <p class="mb-0 opacity-75 text-end pe-3">
-    $${product.price}
-  </p>
+          <button class="btn btn-danger d-flex align-items-center justify-content-center" onclick="deleteProduct(${cart.indexOf(
+            product
+          )})">
+            <i class="material-icons">close</i>
+          </button>
+        </div>
+        <strong class="font-bold">x ${product.quantity}</strong>
+      </div>
+    `;
 
-  
-  <button class="btn btn-danger d-flex align-items-center justify-content-center">
-    <i class="material-icons">close</i>
-  </button>
-
-</div>
- <strong class="font-bold">x ${product.quantity}</strong>
-
-        
-       
-      
-   
-  </div>
-  `;
-
-    // Agregar el producto al contenedor principal
     productsCart.appendChild(productItem);
   });
 }
@@ -251,7 +244,24 @@ function renderProductsCart() {
 function renderQuantityProductsCart() {
   const buttonCart = document.getElementById("cart-button");
 
-  
   const badge = buttonCart.querySelector(".badge-number");
   badge.textContent = cart.length;
+}
+
+/**
+ * Deletes a product from the cart by index.
+ *
+ * @param {number} index - The index of the product in the cart to delete.
+ */
+function deleteProduct(index) {
+  cart.splice(index, 1);
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  const toastBody = toastElement.querySelector('.toast-body');
+  toastBody.textContent = `El producto ha sido eliminado del carrito correctamente.`;
+  toast.show();
+
+  renderProductsCart();
+  renderQuantityProductsCart();
 }
