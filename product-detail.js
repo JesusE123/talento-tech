@@ -62,7 +62,7 @@ function renderProductDetail(product) {
         <p><strong>Description:</strong> ${product.description}</p>
         <p><strong>Category:</strong> ${product.category}</p>
         <p><strong>Rate:</strong> ${product.rating.rate}</p>
-        <a href="index.html" class="btn btn-primary">Go Back</a>
+        <a href="index.html" class="btn btn-primary">Volver a la tienda</a>
       </div>
     </div>
   `;

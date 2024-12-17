@@ -2,11 +2,15 @@ const API_URL = "https://fakestoreapi.com";
 
 const productList = document.getElementById("products");
 const categoriesList = document.getElementById("categories");
+const resetProducts = document.getElementById("reset-products");
 const productsCart = document.getElementById("cart");
 const buttonCart = document.getElementById("cart-button");
 const toastElement = document.getElementById("liveToast");
 const toast = new bootstrap.Toast(toastElement);
+const buttonConfirm = document.getElementById("confirm-sale");
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+console.log(cart);
 
 let allProducts = [];
 
@@ -31,6 +35,8 @@ async function getProducts(category = null) {
       ? `${API_URL}/products/category/${category}`
       : `${API_URL}/products`;
 
+    document.getElementById("loading-message").style.display = "block";
+
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -42,6 +48,8 @@ async function getProducts(category = null) {
     renderProducts(products);
   } catch (error) {
     console.error("Failed to fetch products:", error);
+  } finally {
+    document.getElementById("loading-message").style.display = "none";
   }
 }
 
@@ -88,8 +96,16 @@ function renderCategories(categories) {
 
     ulElement.appendChild(categoryItem);
   });
+  const buttonReset = document.createElement("button");
+  buttonReset.className = "btn btn-outline-primary w-100 mt-3";
+  buttonReset.textContent = "Todos";
+
+  buttonReset.addEventListener("click", function () {
+    getProducts();
+  });
 
   categoriesList.appendChild(ulElement);
+  resetProducts.appendChild(buttonReset);
 }
 /**
  * renders the products in the DOM"
@@ -181,9 +197,9 @@ function captureProduct(product) {
  * @param {Object} product - The product to be added to the cart.
  */
 function addToCart(product) {
-  console.log(product);
   cart.push(product);
   renderProductsCart();
+  calculateTotal();
 }
 
 /**
@@ -198,10 +214,16 @@ function addToCart(product) {
 function renderProductsCart() {
   productsCart.innerHTML = "";
   const offcanvasTitle = document.getElementById("offcanvasExampleLabel");
-  if(cart.length === 0) {
+  if (cart.length === 0) {
     offcanvasTitle.textContent = "Tu carrito se encuentra vacio.";
   } else {
     offcanvasTitle.textContent = "Estos son tus productos:";
+  }
+
+  if (cart.length >= 1) {
+    buttonConfirm.className = "btn btn-outline-primary w-100 mt-3";
+  } else {
+    buttonConfirm.className = "disabled btn btn-outline-primary w-100 mt-3";
   }
 
   cart.forEach((product) => {
@@ -216,7 +238,7 @@ function renderProductsCart() {
           </h6>
 
           <p class="mb-0 opacity-75 text-end pe-3">
-            $${product.price}
+            $${product.price * product.quantity}
           </p>
 
           <button class="btn btn-danger d-flex align-items-center justify-content-center" onclick="deleteProduct(${cart.indexOf(
@@ -226,10 +248,31 @@ function renderProductsCart() {
           </button>
         </div>
         <strong class="font-bold">x ${product.quantity}</strong>
-      </div>
+
+       
+    <div class="d-flex gap-2 justify-content-end">
+  <button class="btn btn-link" onclick="decreaseQuantity(${cart.indexOf(
+    product
+  )})">
+    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+      <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+    </svg>
+  </button>
+  
+  <button class="btn btn-link" onclick="increaseQuantity(${cart.indexOf(
+    product
+  )})">
+    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+    </svg>
+  </button>
+</div>
     `;
 
     productsCart.appendChild(productItem);
+    calculateTotal();
   });
 }
 
@@ -258,10 +301,56 @@ function deleteProduct(index) {
 
   localStorage.setItem("cart", JSON.stringify(cart));
 
-  const toastBody = toastElement.querySelector('.toast-body');
+  const toastBody = toastElement.querySelector(".toast-body");
   toastBody.textContent = `El producto ha sido eliminado del carrito correctamente.`;
   toast.show();
 
   renderProductsCart();
   renderQuantityProductsCart();
+  calculateTotal();
 }
+
+function increaseQuantity(index) {
+  cart[index].quantity += 1;
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderProductsCart();
+  renderQuantityProductsCart();
+}
+
+function decreaseQuantity(index) {
+  if (cart[index].quantity > 1) {
+    cart[index].quantity -= 1;
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderProductsCart();
+    renderQuantityProductsCart();
+  } else {
+    deleteProduct(index);
+  }
+}
+
+function calculateTotal() {
+  let total = 0;
+
+  if (cart.length === 0) {
+    document.getElementById("total").textContent = "Total de la compra: $0";
+  }
+
+  cart.forEach((product) => {
+    if (product.price && product.quantity) {
+      total += product.price * product.quantity;
+    }
+  });
+
+  document.getElementById(
+    "total"
+  ).textContent = `Total de la compra: $${total}`;
+
+  return total;
+}
+
+buttonConfirm.addEventListener("click", () => {
+  cart = [];
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderProductsCart();
+  renderQuantityProductsCart();
+});

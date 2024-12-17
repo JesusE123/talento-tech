@@ -45,14 +45,15 @@ footer {
   padding: 1rem;
   bottom: 0;
   width: 100%;
+  margin-top: auto;
 }
 
 
-.loading-message {
+.spinner-border {
   position: fixed;
-  top: 50%;
+  top: 20%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  
   font-size: 24px;
   font-weight: bold;
   color: #007bff;
