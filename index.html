@@ -20,6 +20,7 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
+
     <title>Nexus Store</title>
   </head>
   <body>
@@ -34,8 +35,8 @@
       </ul>
     </nav>
     <main>
-      <div class="spinner-border" role="status" id="loading-message">
-        <span class="sr-only"></span>
+      <div id="loading-message">
+        <l-spiral size="40" speed="0.9" color="black"></l-spiral>
       </div>
       <div class="d-flex justify-content-end">
         <button
@@ -75,13 +76,9 @@
           <div class="offcanvas-body">
             <div id="cart" class="h-75 overflow-auto"></div>
             <strong class="mt-5" id="total">Total de la compra: $0</strong>
-           
-              <a href="/confirm-sale.html"  id="confirm-sale">Confirmar compra</a>
-           
-          </div>
 
-         
-         
+            <a href="/confirm-sale.html" id="confirm-sale">Confirmar compra</a>
+          </div>
         </div>
       </div>
 
@@ -115,21 +112,13 @@
           placeholder="Mens..."
           autocomplete="off"
         />
-       
       </div>
-      <div class="d-flex justify-content-center ">
-        <div id="categories" class="mb-3">
-        
-        </div>
+      <div class="d-flex justify-content-center">
+        <div id="categories" class="mb-3"></div>
 
-        <div id="reset-products">
-         
-        </div>
+        <div id="reset-products"></div>
       </div>
-      
 
-     
-      
       <section id="products" class="row g-4"></section>
     </main>
     <footer>
@@ -140,6 +129,11 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/spiral.js"
+    ></script>
+
     <script src="./script.js"></script>
   </body>
 </html>
